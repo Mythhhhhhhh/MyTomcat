@@ -1,9 +1,9 @@
 package cn.myth.tomcat.catalina.startup;
 
-import cn.myth.tomcat.util.HttpProtocolUtil;
+import cn.myth.tomcat.coyote.Request;
+import cn.myth.tomcat.coyote.Response;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -25,18 +25,21 @@ public final class Bootstrap {
      */
     public void start() throws IOException {
         /**
-         * 1.0版本
-         * 需求：浏览器请求http://localhost:8080,返回一个固定的字符串到页面“Hello MyTomcat!”
+         * 2.0版本
+         * 需求：封装Request和Response对象，返回html静态资源文件
          */
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("=====>>>MyTomcat start on port: " + port);
+
         while (true) {
             Socket socket = serverSocket.accept();
-            // 有了socket，接收到请求，获取输出流
-            OutputStream outputStream = socket.getOutputStream();
-            String data = "Hello MyTomcat!";
-            String responseText = HttpProtocolUtil.getHttp200header(data.getBytes().length) + data;
-            outputStream.write(responseText.getBytes());
+
+            // 封装Request对象和Response对象
+            Request request = new Request(socket.getInputStream());
+            Response response = new Response(socket.getOutputStream());
+
+            response.outputHtml(request.getUrl());
+
             socket.close();
         }
     }
