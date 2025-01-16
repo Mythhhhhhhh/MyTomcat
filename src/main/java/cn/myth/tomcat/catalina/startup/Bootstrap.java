@@ -9,6 +9,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.io.SAXReader;
+import sun.nio.ch.ThreadPool;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +18,10 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public final class Bootstrap {
 
@@ -38,14 +43,25 @@ public final class Bootstrap {
         // 加载解析相关的配置 web.xml
         loadServlet();
 
+        // 定义一个线程池
+        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
+                10,
+                50,
+                100,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(50),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.AbortPolicy()
+        );
+
+
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("=====>>>MyTomcat start on port: " + port);
 
-        // 多线程改造处理
         while (true) {
             Socket socket = serverSocket.accept();
             RequestProcessor requestProcessor = new RequestProcessor(socket, servletMap);
-            requestProcessor.start();
+            threadPoolExecutor.execute(requestProcessor);
         }
     }
 
