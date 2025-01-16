@@ -1,6 +1,7 @@
 package cn.myth.tomcat.catalina.startup;
 
 import cn.myth.tomcat.coyote.Request;
+import cn.myth.tomcat.coyote.RequestProcessor;
 import cn.myth.tomcat.coyote.Response;
 import cn.myth.tomcat.servlet.HttpServlet;
 import org.dom4j.Document;
@@ -37,29 +38,14 @@ public final class Bootstrap {
         // 加载解析相关的配置 web.xml
         loadServlet();
 
-        /**
-         * 3.0版本
-         * 需求：可以请求动态资源(Servlet)
-         */
         ServerSocket serverSocket = new ServerSocket(port);
         System.out.println("=====>>>MyTomcat start on port: " + port);
 
+        // 多线程改造处理
         while (true) {
             Socket socket = serverSocket.accept();
-
-            // 封装Request对象和Response对象
-            Request request = new Request(socket.getInputStream());
-            Response response = new Response(socket.getOutputStream());
-
-            // 静态资源处理
-            if (servletMap.get(request.getUrl()) == null) {
-                response.outputHtml(request.getUrl());
-            } else {
-                // 动态servlet请求
-                HttpServlet httpServlet = servletMap.get(request.getUrl());
-                httpServlet.service(request, response);
-            }
-            socket.close();
+            RequestProcessor requestProcessor = new RequestProcessor(socket, servletMap);
+            requestProcessor.start();
         }
     }
 
