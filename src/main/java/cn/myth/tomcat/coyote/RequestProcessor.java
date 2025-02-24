@@ -5,6 +5,7 @@ import cn.myth.tomcat.servlet.HttpServlet;
 import java.net.Socket;
 import java.util.Map;
 
+@Deprecated
 public class RequestProcessor extends Thread {
 
     private final Socket socket;

@@ -1,69 +1,27 @@
 package cn.myth.tomcat.catalina.startup;
 
-import cn.myth.tomcat.coyote.Request;
-import cn.myth.tomcat.coyote.RequestProcessor;
-import cn.myth.tomcat.coyote.Response;
-import cn.myth.tomcat.servlet.HttpServlet;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.Node;
-import org.dom4j.io.SAXReader;
-import sun.nio.ch.ThreadPool;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 public final class Bootstrap {
 
-    /* 定义socket监听的端口号 */
-    private int port = 8080;
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
+    private static final Logger log = LoggerFactory.getLogger(Bootstrap.class);
 
     /**
-     * MyTomcat启动需要初始化展开的一些操作
+     * Bootstrap 守护进程对象
      */
-    public void start() throws IOException {
-        // 加载解析相关的配置 web.xml
-        loadServlet();
+    private static volatile Bootstrap daemon = null;
 
-        // 定义一个线程池
-        ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(
-                10,
-                50,
-                100,
-                TimeUnit.SECONDS,
-                new ArrayBlockingQueue<>(50),
-                Executors.defaultThreadFactory(),
-                new ThreadPoolExecutor.AbortPolicy()
-        );
+    /**
+     * Catalina守护进程对象
+     * 一个Catalina实例对象
+     */
+    private Object catalinaDaemon = null;
 
-
-        ServerSocket serverSocket = new ServerSocket(port);
-        System.out.println("=====>>>MyTomcat start on port: " + port);
-
-        while (true) {
-            Socket socket = serverSocket.accept();
-            RequestProcessor requestProcessor = new RequestProcessor(socket, servletMap);
-            threadPoolExecutor.execute(requestProcessor);
-        }
-    }
+    private ClassLoader catalinaLoader = null;
 
     /**
      * MyTomcat 启动入口
@@ -72,40 +30,73 @@ public final class Bootstrap {
         Bootstrap bootstrap = new Bootstrap();
         try {
             // 启动MyTomcat
-            bootstrap.start();
-        } catch (IOException e) {
-            e.printStackTrace();
+            bootstrap.init();
+        } catch (Throwable t) {
+            handleThrowable(t);
+            t.printStackTrace();
+            return;
         }
-    }
+        daemon = bootstrap;// 当前Bootstrap类对象本身
 
-    private Map<String, HttpServlet> servletMap = new HashMap<>();
-
-    /**
-     * 加载解析web.xml，初始化Servlet
-     */
-    private void loadServlet() {
-        InputStream resourceAsStream = this.getClass().getClassLoader().getResourceAsStream("web.xml");
-        SAXReader saxReader = new SAXReader();
         try {
-            Document document = saxReader.read(resourceAsStream);
-            Element rootElement = document.getRootElement();
-
-            List<Element> selectNodes = rootElement.selectNodes("//servlet");
-            for (Element element : selectNodes) {
-                Element servletNameElement = (Element) element.selectSingleNode("servlet-name");
-                String servletName = servletNameElement.getStringValue();
-                Element servletClassElement = (Element) element.selectSingleNode("servlet-class");
-                String servletClass = servletClassElement.getStringValue();
-
-                // 根据servlet-name的值找到url-pattern
-                Element servletMappingElement = (Element) rootElement.selectSingleNode("/web-app/servlet-mapping[servlet-name='" + servletName + "']");
-                String urlPattern = servletMappingElement.selectSingleNode("url-pattern").getStringValue();
-
-                servletMap.put(urlPattern, (HttpServlet) Class.forName(servletClass).newInstance());
+            // bootstrap加载
+            daemon.load(args);
+            // bootstrap启动
+            daemon.start();
+        } catch (Throwable t) {
+            // Unwrap the Exception for clearer error reporting
+            if (t instanceof InvocationTargetException &&
+                    t.getCause() != null) {
+                t = t.getCause();
             }
-        } catch (DocumentException | ClassNotFoundException | IllegalAccessException | InstantiationException e) {
-            e.printStackTrace();
+            handleThrowable(t);
+            t.printStackTrace();
+            System.exit(1);
         }
     }
 
+    public void init() throws Exception {
+        initClassLoaders();
+
+        Class<?> startupClass = catalinaLoader.loadClass("cn.myth.tomcat.catalina.startup.Catalina");
+        Object startupInstance = startupClass.getConstructor().newInstance();
+
+        catalinaDaemon = startupInstance; // catalinaDaemon 是一个 Catalina实例
+    }
+
+    private void initClassLoaders() {
+        catalinaLoader = this.getClass().getClassLoader();
+    }
+
+    public void load(String[] arguments) throws Exception {
+        // Call the load() method
+        String methodName = "load";
+        Object[] param = null;
+        Class<?>[] paramTypes = null;
+
+        // 通过反射调用Catalina.load()方法
+        Method method = catalinaDaemon.getClass().getMethod(methodName, paramTypes);
+        log.debug("Calling startup class " + method);
+        method.invoke(catalinaDaemon, param);// Catalina.load()
+    }
+
+    public void start() throws Exception {
+        if (catalinaDaemon == null) {
+            init();
+        }
+        Method method = catalinaDaemon.getClass().getMethod("start", (Class []) null);
+        method.invoke(catalinaDaemon, (Object []) null);// Catalina.start()
+    }
+
+
+    // Copied from ExceptionUtils since that class is not visible during start
+    private static void handleThrowable(Throwable t) {
+        if (t instanceof ThreadDeath) {
+            throw (ThreadDeath) t;
+        }
+        if (t instanceof VirtualMachineError) {
+            throw (VirtualMachineError) t;
+        }
+        // All other instances of Throwable will be silently swallowed
+    }
 }

@@ -6,10 +6,11 @@ import cn.myth.tomcat.util.HttpProtocolUtil;
 
 import java.io.IOException;
 
-public class TestServlet extends HttpServlet {
+public class MyTestServlet extends HttpServlet {
     @Override
     public void doGet(Request request, Response response) {
-        String content = "<h1>Test Servlet Get</h1>";
+        String content = "<h1>My Test Servlet Get</h1>";
+        System.out.println(content);
         try {
             response.output(HttpProtocolUtil.getHttp200header(content.getBytes().length) + content);
         } catch (IOException e) {
@@ -19,7 +20,8 @@ public class TestServlet extends HttpServlet {
 
     @Override
     public void doPost(Request request, Response response) {
-        String content = "<h1>Test Servlet Post</h1>";
+        String content = "<h1>My Test Servlet Post</h1>";
+        System.out.println(content);
         try {
             response.output(HttpProtocolUtil.getHttp200header(content.getBytes().length) + content);
         } catch (IOException e) {

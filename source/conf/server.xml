@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Server>
+    <Service>
+        <Connector port="8080"/>
+        <Engine>
+            <Host name="localhost" appBase="/Users/myth/IdeaProjects/my/MyTomcat/source/webapps"></Host>
+        </Engine>
+    </Service>
+</Server>

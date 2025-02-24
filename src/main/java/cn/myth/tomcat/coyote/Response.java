@@ -1,14 +1,23 @@
 package cn.myth.tomcat.coyote;
 
+import cn.myth.tomcat.catalina.Context;
+import cn.myth.tomcat.catalina.Host;
 import cn.myth.tomcat.util.HttpProtocolUtil;
 import cn.myth.tomcat.util.StaticResourceUtil;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 public class Response {
+
+    /**
+     * 主机
+     */
+    private Host host;
+
+    /**
+     * 上下文
+     */
+    private Context context;
 
     private OutputStream outputStream;
 
@@ -43,6 +52,29 @@ public class Response {
             // 输出404
             output(HttpProtocolUtil.getHttp404header());
         }
+    }
+
+    public void outputHtmlAppBase(String path) throws IOException {
+        String absolutePath = host.getAppBase() + "/" + path;
+        File file = new File(absolutePath);
+        if (file.exists() && file.isFile()) {
+            InputStream fis = new FileInputStream(file);
+            StaticResourceUtil.outputResource(fis,outputStream);
+        } else {
+            output(HttpProtocolUtil.getHttp404header());
+        }
+    }
+
+    public Host getHost() {
+        return host;
+    }
+
+    public void setHost(Host host) {
+        this.host = host;
+    }
+
+    public void setContext(Context context) {
+        this.context = context;
     }
 
 }

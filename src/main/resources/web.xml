@@ -2,7 +2,7 @@
 <web-app>
     <servlet>
         <servlet-name>test</servlet-name>
-        <servlet-class>cn.myth.tomcat.servlet.TestServlet</servlet-class>
+        <servlet-class>cn.myth.tomcat.servlet.MyTestServlet</servlet-class>
     </servlet>
 
     <servlet-mapping>
