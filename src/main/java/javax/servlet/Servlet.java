@@ -1,4 +1,4 @@
-package cn.myth.tomcat.servlet;
+package javax.servlet;
 
 import cn.myth.tomcat.coyote.Request;
 import cn.myth.tomcat.coyote.Response;

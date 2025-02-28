@@ -1,9 +1,14 @@
-package cn.myth.tomcat.servlet;
+package javax.servlet.http;
 
 import cn.myth.tomcat.coyote.Request;
 import cn.myth.tomcat.coyote.Response;
 
+import javax.servlet.Servlet;
+
 public abstract class HttpServlet implements Servlet {
+
+    private static final String METHOD_GET = "GET";
+    private static final String METHOD_POST = "POST";
 
     @Override
     public void init() {
@@ -15,12 +20,12 @@ public abstract class HttpServlet implements Servlet {
 
     @Override
     public void service(Request request, Response response) {
-        if ("GET".equalsIgnoreCase(request.getMethod())) {
+        String method = request.getMethod();
+        if (method.equals(METHOD_GET)) {
             doGet(request, response);
-        } else if ("POST".equalsIgnoreCase(request.getMethod())) {
+        } else if (method.equals(METHOD_POST)) {
             doPost(request, response);
         }
-
     }
 
     public abstract void doGet(Request request, Response response);

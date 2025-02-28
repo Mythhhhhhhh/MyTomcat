@@ -1,6 +1,6 @@
 package cn.myth.tomcat.coyote;
 
-import cn.myth.tomcat.servlet.HttpServlet;
+import javax.servlet.http.HttpServlet;
 
 import java.net.Socket;
 import java.util.Map;

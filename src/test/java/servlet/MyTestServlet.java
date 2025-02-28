@@ -1,9 +1,10 @@
-package cn.myth.tomcat.servlet;
+package servlet;
 
 import cn.myth.tomcat.coyote.Request;
 import cn.myth.tomcat.coyote.Response;
 import cn.myth.tomcat.util.HttpProtocolUtil;
 
+import javax.servlet.http.HttpServlet;
 import java.io.IOException;
 
 public class MyTestServlet extends HttpServlet {

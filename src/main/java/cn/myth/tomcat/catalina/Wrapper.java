@@ -1,6 +1,6 @@
 package cn.myth.tomcat.catalina;
 
-import cn.myth.tomcat.servlet.Servlet;
+import javax.servlet.Servlet;
 
 /**
  * Wrapper

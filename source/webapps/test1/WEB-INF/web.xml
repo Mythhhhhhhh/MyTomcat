@@ -7,7 +7,7 @@
 
   <servlet>
     <servlet-name>test1</servlet-name>
-    <servlet-class>cn.myth.tomcat.servlet.TestServlet</servlet-class>
+    <servlet-class>cn.myth.tomcat.TestServlet</servlet-class>
   </servlet>
   
   <servlet-mapping>

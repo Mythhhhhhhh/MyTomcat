@@ -3,7 +3,7 @@ package cn.myth.tomcat.catalina.core;
 import cn.myth.tomcat.catalina.Context;
 import cn.myth.tomcat.catalina.Wrapper;
 import cn.myth.tomcat.catalina.startup.LifecycleException;
-import cn.myth.tomcat.servlet.Servlet;
+import javax.servlet.Servlet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
